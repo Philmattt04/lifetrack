@@ -10,7 +10,7 @@ class ClaudeService {
   // Updated by deploy.sh after Terraform outputs the API Gateway URL
   static const apiUrl = String.fromEnvironment(
     'API_URL',
-    defaultValue: 'https://jmx93lnv9f.execute-api.us-east-1.amazonaws.com//insights',
+    defaultValue: 'https://jmx93lnv9f.execute-api.us-east-1.amazonaws.com/insights',
   );
 
   static final _currFmt = NumberFormat.currency(symbol: '\$');

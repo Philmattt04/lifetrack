@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/lifetrack_provider.dart';
 import 'screens/today_screen.dart';
 import 'screens/lifestyles_screen.dart';
 import 'screens/all_data_screen.dart';
 import 'screens/insights_screen.dart';
+
+const _themeModePrefKey = 'lt_theme_mode';
 
 void main() {
   runApp(
@@ -15,18 +18,55 @@ void main() {
   );
 }
 
-class LifeTrackApp extends StatelessWidget {
+class ThemeModeController extends ValueNotifier<ThemeMode> {
+  ThemeModeController() : super(ThemeMode.system) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString(_themeModePrefKey);
+    if (saved == 'light') value = ThemeMode.light;
+    if (saved == 'dark') value = ThemeMode.dark;
+  }
+
+  Future<void> toggle() async {
+    value = value == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_themeModePrefKey, value == ThemeMode.dark ? 'dark' : 'light');
+  }
+}
+
+class LifeTrackApp extends StatefulWidget {
   const LifeTrackApp({super.key});
 
   @override
+  State<LifeTrackApp> createState() => _LifeTrackAppState();
+}
+
+class _LifeTrackAppState extends State<LifeTrackApp> {
+  final _themeMode = ThemeModeController();
+
+  @override
+  void dispose() {
+    _themeMode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'LifeTrack',
-      debugShowCheckedModeBanner: false,
-      theme: _theme(Brightness.light),
-      darkTheme: _theme(Brightness.dark),
-      themeMode: ThemeMode.system,
-      home: const _Shell(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: _themeMode,
+      builder: (context, mode, _) {
+        return MaterialApp(
+          title: 'LifeTrack',
+          debugShowCheckedModeBanner: false,
+          theme: _theme(Brightness.light),
+          darkTheme: _theme(Brightness.dark),
+          themeMode: mode,
+          home: _Shell(themeMode: _themeMode),
+        );
+      },
     );
   }
 
@@ -51,7 +91,9 @@ class LifeTrackApp extends StatelessWidget {
 }
 
 class _Shell extends StatefulWidget {
-  const _Shell();
+  final ThemeModeController themeMode;
+
+  const _Shell({required this.themeMode});
 
   @override
   State<_Shell> createState() => _ShellState();
@@ -72,7 +114,25 @@ class _ShellState extends State<_Shell> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      body: IndexedStack(index: _index, children: _screens),
+      body: Stack(
+        children: [
+          SafeArea(
+            bottom: false,
+            child: IndexedStack(index: _index, children: _screens),
+          ),
+          Positioned(
+            top: 8,
+            right: 12,
+            child: SafeArea(
+              bottom: false,
+              child: _ThemeToggleButton(
+                isDark: isDark,
+                onPressed: widget.themeMode.toggle,
+              ),
+            ),
+          ),
+        ],
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),
@@ -102,6 +162,30 @@ class _ShellState extends State<_Shell> {
             label: 'Insights',
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ThemeToggleButton extends StatelessWidget {
+  final bool isDark;
+  final VoidCallback onPressed;
+
+  const _ThemeToggleButton({required this.isDark, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: isDark ? const Color(0xFF1f1f1f) : const Color(0xFFf3f4f6),
+      shape: const CircleBorder(),
+      child: IconButton(
+        tooltip: isDark ? 'Switch to light mode' : 'Switch to dark mode',
+        icon: Icon(
+          isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+          color: isDark ? Colors.white : const Color(0xFF111827),
+          size: 20,
+        ),
+        onPressed: onPressed,
       ),
     );
   }

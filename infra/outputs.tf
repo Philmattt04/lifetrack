@@ -13,5 +13,5 @@ output "s3_bucket" {
 
 output "api_url" {
   description = "API Gateway endpoint — paste this into lib/services/claude_service.dart"
-  value       = "${aws_apigatewayv2_stage.insights.invoke_url}/insights"
+  value       = "${trimsuffix(aws_apigatewayv2_stage.insights.invoke_url, "/")}/insights"
 }
