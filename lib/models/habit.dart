@@ -3,6 +3,20 @@ import 'package:flutter/material.dart';
 
 enum HabitFrequency { daily, weekdays, custom }
 
+enum HabitTimeOfDay {
+  anyTime,
+  morning,
+  afternoon,
+  evening;
+
+  String get label => switch (this) {
+        HabitTimeOfDay.anyTime => 'Any time',
+        HabitTimeOfDay.morning => 'Morning',
+        HabitTimeOfDay.afternoon => 'Afternoon',
+        HabitTimeOfDay.evening => 'Evening',
+      };
+}
+
 class Habit {
   final String id;
   final String name;
@@ -10,6 +24,7 @@ class Habit {
   final Color color;
   final HabitFrequency frequency;
   final List<int> targetDays;
+  final HabitTimeOfDay timeOfDay;
   final DateTime createdAt;
 
   const Habit({
@@ -19,6 +34,7 @@ class Habit {
     required this.color,
     required this.frequency,
     required this.targetDays,
+    this.timeOfDay = HabitTimeOfDay.anyTime,
     required this.createdAt,
   });
 
@@ -36,6 +52,7 @@ class Habit {
   Habit copyWith({
     String? name, String? emoji, Color? color,
     HabitFrequency? frequency, List<int>? targetDays,
+    HabitTimeOfDay? timeOfDay,
   }) =>
       Habit(
         id: id,
@@ -44,6 +61,7 @@ class Habit {
         color: color ?? this.color,
         frequency: frequency ?? this.frequency,
         targetDays: targetDays ?? this.targetDays,
+        timeOfDay: timeOfDay ?? this.timeOfDay,
         createdAt: createdAt,
       );
 
@@ -54,6 +72,7 @@ class Habit {
         'color': color.value,
         'frequency': frequency.name,
         'target_days': jsonEncode(targetDays),
+        'time_of_day': timeOfDay.name,
         'created_at': createdAt.toIso8601String(),
       };
 
@@ -69,6 +88,10 @@ class Habit {
         targetDays: (jsonDecode(m['target_days'] as String) as List)
             .map((e) => e as int)
             .toList(),
+        timeOfDay: HabitTimeOfDay.values.firstWhere(
+          (t) => t.name == (m['time_of_day'] as String?),
+          orElse: () => HabitTimeOfDay.anyTime,
+        ),
         createdAt: DateTime.parse(m['created_at'] as String),
       );
 }

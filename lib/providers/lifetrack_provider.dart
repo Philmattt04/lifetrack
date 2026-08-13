@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../models/habit.dart';
@@ -6,6 +7,7 @@ import '../models/journal_entry.dart';
 import '../models/transaction.dart';
 import '../services/storage_service.dart';
 import '../services/claude_service.dart';
+import '../services/demo_data.dart';
 
 class LifeTrackProvider extends ChangeNotifier {
   final _db = StorageService.instance;
@@ -97,6 +99,10 @@ class LifeTrackProvider extends ChangeNotifier {
     notifyListeners();
     try {
       _habits = await _db.getHabits();
+      if (kIsWeb && _habits.isEmpty) {
+        await DemoData.seed();
+        _habits = await _db.getHabits();
+      }
       final logs = await _db.getLogsForDate(todayKey);
       _todayCompletions = {for (final l in logs) l.habitId: l.completed};
       _journal = await _db.getJournalEntries();
@@ -145,11 +151,12 @@ class LifeTrackProvider extends ChangeNotifier {
     required String name, required String emoji,
     required Color color, required HabitFrequency frequency,
     required List<int> targetDays,
+    HabitTimeOfDay timeOfDay = HabitTimeOfDay.anyTime,
   }) =>
       Habit(
         id: _uuid.v4(), name: name, emoji: emoji, color: color,
         frequency: frequency, targetDays: targetDays,
-        createdAt: DateTime.now(),
+        timeOfDay: timeOfDay, createdAt: DateTime.now(),
       );
 
   // ── Journal ───────────────────────────────────────────────────────────────

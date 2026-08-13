@@ -60,7 +60,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
               Text('AI Insights', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700,
                   color: isDark ? Colors.white : const Color(0xFF111827))),
               const SizedBox(height: 4),
-              Text('Habits · Journal · Budget · Powered by Claude',
+              Text('Habits · Journal · Budget',
                   style: TextStyle(fontSize: 12,
                       color: isDark ? const Color(0xFF6b7280) : const Color(0xFF9ca3af))),
               const SizedBox(height: 20),

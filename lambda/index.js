@@ -10,6 +10,9 @@ const SYSTEM = `You are LifeTrack's AI coach — a warm, insightful advisor with
 Your role is to connect these dots and give holistic, personalized advice. When you notice patterns (e.g. low mood on high-spending days, or skipped habits correlating with stress), point them out. Be specific with numbers from the data. Keep responses to 2-4 paragraphs. Use markdown formatting. Be encouraging and honest.`;
 
 exports.handler = async (event) => {
+  // Lambda Function URL uses requestContext.http.method (payload v2.0)
+  // API Gateway uses event.httpMethod (payload v1.0)
+  const method = event.requestContext?.http?.method || event.httpMethod || 'POST';
   const origin = event.headers?.origin || event.headers?.Origin || '*';
 
   const corsHeaders = {
@@ -19,11 +22,11 @@ exports.handler = async (event) => {
     'Content-Type': 'application/json',
   };
 
-  if (event.httpMethod === 'OPTIONS') {
+  if (method === 'OPTIONS') {
     return { statusCode: 200, headers: corsHeaders, body: '' };
   }
 
-  if (event.httpMethod !== 'POST') {
+  if (method !== 'POST') {
     return { statusCode: 405, headers: corsHeaders, body: JSON.stringify({ error: 'Method Not Allowed' }) };
   }
 
